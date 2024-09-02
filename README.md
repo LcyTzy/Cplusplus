@@ -906,3 +906,258 @@ void MinHeapInsert(vector<int> &A, int key) {
 }
 ```
 
+## 第七章 快速排序
+
+### 快速排序的描述
+
+与归并排序一样，快速排序也使用了分治思想。
+
+- 分解：数组A被划分为两个（可能为空子数组）A1，A2，使得A1的每一个元素都小于等于A2。
+- 解决：通过递归调用快速排序，对子数组进行排序
+- 合并：
+
+```
+QUICKSORT(A, p, r)
+	if p < r
+		q = PARTITION(A, p, r)
+		QUICKSORT(A, p, q - 1)
+		QUICKSORT(A, q + 1, r)
+		
+```
+
+**数组的划分**
+
+算法的关键部分是PARTITION过程，它实现了对子数组A的原址重排。
+
+```
+PARTITION(A, p, r)
+	x = A[r]
+	i = p - 1
+	for j = p to r - 1
+		if A[j] <= x
+			i = i + 1
+			exchange A[i] with A[j]
+	exchange A[i + 1] with A[r]
+	return i + 1
+```
+
+```c++
+#pragma once
+
+#include "vector"
+#include "algorithm"
+
+using namespace std;
+
+
+int ParTition(vector<int> &A, int p, int r) {
+    int x = A[r];
+    int i = p - 1;
+    for (int j = p; j <= r - 1; ++j) {
+        if (A[j] <= x) {
+            i++;
+            swap(A[i], A[j]);
+        }
+    }
+    swap(A[i + 1], A[r]);
+    return i + 1;
+}
+
+
+void QuickSort(vector<int> &A, int p, int r) {
+    if (p < r) {
+        int q = ParTition(A, p, r);
+        QuickSort(A, p, q - 1);
+        QuickSort(A, q + 1, r);
+    }
+}
+
+// // 测试函数
+// int main() {
+//     vector<int> A = {2, 8, 7, 1, 3, 5, 6, 4};    
+//     QuickSort(A, 0, A.size() - 1);
+//     for (auto i : A) {
+//         cout << i << " ";
+//     }
+// }
+```
+
+### 快速排序的性能
+
+快速排序的运行时间依赖于划分是否平衡，而平衡与否有依赖于用于划分的元素。如果划分是平衡的，那么性能与归并排序一样。如果不是，则接近于插入排序。
+
+### 快速排序的随机化版本
+
+如果采用一种称为**随机抽样**的随机化技术，那么可以使得分析变得更加简单。
+
+从子数组中随机选择一个元素作为主元。
+
+```
+RANDOMIZED-PARTITION(A, p, r)
+	i = RANDOM(p, r)
+	exchange A[r] with A[i]
+	return PARTITION(A, p, r)
+```
+
+```
+RANDOMIZED-QUICKSORT(A, p, r)
+	if p < r
+		q = RANDOMIZED-PARTITION(A, p, r)
+		RANDOMIZED-QUICKSORT(A, p, q - 1)
+		RANDOMIZED-QUICKSORT(A, q + 1, r)
+```
+
+```c++
+// 采用随机抽样
+int RandomizedPartition(vector<int> &A, int p, int r) {
+    int i = (rand() % r - p + 1) + p;
+    swap(A[r], A[i]);
+    return ParTition(A, p, r);
+}
+
+void RandomizedQuickSort(vector<int> &A, int p, int r) {
+    if (p < r) {
+        int q = RandomizedPartition(A, p, r);
+        RandomizedQuickSort(A, p, q - 1);
+        RandomizedQuickSort(A, q + 1, r);
+    }
+}
+```
+
+#### 补充
+
+**C++随机数（rand和srand）函数用法详解**
+
+C++ 提供了一组函数以生成和使用随机数字。随机数字就是从一组可能的值中进行随机选择而获得的一个值。该组中的值都有相同的被选中的几率。
+
+随机数字常用于许多不同类型的程序中，以下是一些示例：
+
+- 计算机游戏通常要使用随机数字来模拟一些随机过程，例如掷骰子或发牌。
+- 模拟程序使用随机数字来决定后续将要发生的一系列操作或人与动物等的行为。可以创建使用随机数字的公式以确定特定事件在程序中出现的时间。
+- 数据分析程序可能会使用随机数字随机选择要检验的数据。
+- 计算机安全系统使用随机数字来加密敏感数据。
+
+C++ 库有一个名为 rand() 的函数，每次调用该函数都将返回一个非负整数。要使用 rand() 函数，必须在程序中包含 <cstdlib> 头文件。以下是其用法示例：
+
+randomNum = rand();
+
+但是，该函数返回的数字其实是伪随机数。这意味着它们具有随机数的表现和属性，但实际上并不是随机的，它们实际上是用算法生成的。
+
+该算法需要一个起始值，称为种子，以生成数字。如果没有给出一个种子，那么它将在每次运行时产生相同的数字流。下面的程序说明了这一点：
+
+```
+//This program demonstrates what happens in C++ if you
+// try to generate random numbers without setting a "seed".
+#include <iostream>
+#include <cstdlib>// Header file needed to use rand
+using namespace std;
+int main()
+{
+    // Generate and printthree random numbers
+    cout << rand() << " ";
+    cout << rand() << " ";
+    cout << rand() << endl ;
+    return 0;
+}
+```
+
+> 第1次运行输出结果：
+> 41 18467 : 6334
+> 第2次运行输出结果：
+> 41 18467 6334
+
+要在每次运行程序时获得不同的随机数字流，则必须为随机数生成器提供一个种子以开始。在 C++ 中，这是通过调用 srand 函数完成的。
+
+在 rand 被调用之前，srand 函数要先被调用，并且 srand 在整个程序中仅被调用一次。
+
+```
+// This program demonstrates using random numbers when a
+// "seed" is provided for the random number generator.
+#include <iostream>
+#include <cstdlib> // Header file needed to use srand and rand
+using namespace std;
+int main()
+{
+    unsigned seed;  // Random generator seed
+    // Get a nseed" value from the user
+    cout << "Enter a seed value: ";
+    cin >> seed;
+    // Set the random generator seed before calling rand()
+    srand(seed);
+    //Now generate and print three random numbers
+    cout << rand() << " ";
+    cout << rand() << " ";
+    cout << rand() << endl;
+    return 0;
+}
+```
+
+> 第1次运行结果：
+> Enter a seed value: 19
+> 100 15331 - 209
+> 第2次运行结果：
+> Enter a seed value: 171
+> 597 10689 28587
+
+程序中，第 9 行中创建的用于保存种子的变量 seed 被声明为 unsigned 无符号类型。这个数据类型只保存非负整数。这是 srand 函数在调用时期望接收的数据类型，因此使用 unsigned 变量类型可以保证不会将负数发送给 srand。从程序的输出可以看出，每次程序使用不同的种子运行时，都会生成不同的随机数字流。然而，如果再次使用 19 或 171 作为种子运行程序，则将获得与第一次完全相同的数字。
+
+程序的第 12 行中，使用 cin 从用户的输入获取随机数生成器种子的值。实际上，获取种子值的另一个常见做法是调用 time 函数，它是 C++ 标准库的一部分。
+
+time 函数返回从 1970 年 1 月 1 日午夜开始到现在逝去的秒数，因此每次运行程序时，它都将提供不同的种子值。下面程序演示了 time 函数的用法。请注意，在调用它时必须给它传递一个参数 0。同时程序中包含一个新的头文件 ctime，此头文件是使用 time 函数所必需的。
+
+```
+//This program demonstrates using the C++ time function
+//to provide a nseed,T for the random number generator.
+#include <iostream>
+#include <cstdlib> // Header file needed to use srand and rand
+#include <ctime> // Header file needed to use time
+using namespace std;
+int main()
+{
+    unsigned seed;  // Random generator seed
+    // Use the time function to get a "seed” value for srand
+    seed = time(0);
+    srand(seed);
+    // Now generate and print three random numbers
+    cout << rand() << " " ;
+    cout << rand() << " " ;
+    cout << rand() << endl;
+    return 0;
+}
+```
+
+程序输出结果：
+
+> 2961 21716 181
+
+**限制随机数的范围**
+
+有时程序需要一个特定范围内的随机数。要将随机数的范围限制在 1 和某个最大值 max 之间的整数，可以使用以下公式：
+
+```
+number = rand() % max + 1;
+```
+
+例如，要生成 1〜6 的随机数来代表骰子的点数，则可以使用以下语句：
+
+```
+dice = rand() % 6 + 1;
+```
+
+这里简单介绍一下其工作原理。求余数运算符（％）可以获得整除之后的余数。当使用通过 rand 函数返回的正整数除以6时，余数将是 0〜5 的数字。因为目标是 1〜6 的数字，所以只需要给余数加 1 即可。
+
+这个想法可以扩展到任意范围内的随机数，其通用公式如下：
+
+```
+number = (rand()%(maxValue - minValue +1)) + minValue;
+```
+
+在上述公式中，minValue 是范围内的最小值，而 maxValue 则是范围内的最大值。例如，要获得 10〜18 的随机数，可以使用以下代码给变量 number 赋值：
+
+```
+const int MIN_VALUE = 10;
+const int MAX_VALUE = 18;
+number = rand() % (MAX_VALUE - MIN_VALUE + 1) + MIN_VALUE;
+```
+
+在上述代码中，（MAX_VALUE - MIN_VALUE + 1）的值为 9，这是目标范围内整数的个数。余数运算符（％）返回的值是 0〜8 的数字，再用它加上 MIN_VALUE（也就是 10），即可获得 10〜18 的随机数。
