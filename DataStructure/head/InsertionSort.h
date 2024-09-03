@@ -14,3 +14,18 @@ void sort(vector<int> &A) {
         A[i + 1] = key;
     }
 }
+
+// 基于遗忘比较交换
+void CompareExchange(vector<int> &A, int i, int j) {
+    if (A[i] > A[j]) {
+        swap(A[i], A[j]);
+    }
+}
+
+void InsertionSort(vector<int> &A) {
+    for (int j = 1; j < A.size(); ++j) {
+        for (int i = j - 1; i >= 0; --i) {
+            CompareExchange(A, i, i + 1);
+        }
+    }
+}
