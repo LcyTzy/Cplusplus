@@ -1161,3 +1161,260 @@ number = rand() % (MAX_VALUE - MIN_VALUE + 1) + MIN_VALUE;
 ```
 
 在上述代码中，（MAX_VALUE - MIN_VALUE + 1）的值为 9，这是目标范围内整数的个数。余数运算符（％）返回的值是 0〜8 的数字，再用它加上 MIN_VALUE（也就是 10），即可获得 10〜18 的随机数。
+
+## 第八章 线性时间排序
+
+前面介绍的排序算法都是**比较排序**：在排序的最终结果中，各元素的次序依赖于它们之间的比较。
+
+本章将介绍三种线性时间复杂度的排序算法：
+
+- 计数排序
+- 基数排序
+- 桶排序
+
+### 计数排序
+
+**基本思想**：对每一个输入元素，确认小于x的元素个数。利用这一信息，就可以直接把x放到它在输出数组中的位置上了
+
+```
+COUNTING-SORT(A, B, k)
+	let C[0.. k] be a new array
+	for i = 0 to k
+		C[i] = 0
+	for j = 1 to A.length
+		C[A[j]] = C[A[j]] + 1
+	// C[i] now contains the number of elements equal to i.
+	for i = 1 to k
+		C[i] = C[i] + C[i - 1]
+	// C[i] now contains the number of elements less than or equal to i.
+	for j = A.length downto 1
+		B[C[A[j]]] = A[j]
+		C[A[j]] = C[A[j]] - 1
+```
+
+```c++
+#pragma once
+
+#include "vector"
+
+using namespace std;
+
+void CountingSort(vector<int> &A, vector<int> &B, int k) {
+    vector<int> C(k + 1, 0);
+    for (int j = 0; j < A.size(); ++j) {
+        C[A[j]]++; 
+    }
+    for (int i = 1; i < k + 1; ++i) {
+        C[i] += C[i - 1];
+    }
+    for (int j = A.size() - 1; j >= 0; --j) {
+        B[C[A[j]] - 1] = A[j];
+        C[A[j]]--;
+    }
+}
+
+// 测试函数
+// int main() {
+//     vector<int> A = {2, 5, 3, 0, 2, 3, 0, 3};
+//     vector<int> B(A.size(), 0);    
+//     CountingSort(A, B, 5);
+//     for (auto i : B) {
+//         cout << i << " ";
+//     }
+// }
+```
+
+### 基数排序
+
+```
+RADIX-SORT(A, d)
+	for i = 1 to d
+		use a stable sort to sort array A on digit i
+```
+
+```c++
+#pragma once
+
+#include "vector"
+#include "algorithm"
+
+using namespace std;
+
+
+void RadixSort(vector<int>& arr) {
+	int max = *max_element(arr.begin(), arr.end());
+	// 获取最大数的位数d
+	int d = 0;
+	while (max) {
+		max /= 10;
+		d++;
+	}
+ 
+	int* count = new int[10];  // 计数器，也就是0~9共10个桶 
+	int* tem = new int[arr.size()];  // 临时数组，和计数排序的临时数组作用一样 
+ 
+	int radix = 1;
+	for (int i = 0; i < d; i++) {// 可以看成进行了d次计数排序，以下代码和基数排序万分相像 
+		// 每次将计数器清零
+		for (int j = 0; j < 10; j++) {
+			count[j] = 0;
+		}
+		for (int j = 0; j < arr.size(); j++) {
+			// 计数，方便后续获得每个数的index 
+			count[(arr[j] / radix) % 10]++;
+		}
+		for (int j = 1; j < 10; j++) {
+			count[j] += count[j - 1];
+		}
+		for (int j = arr.size() - 1; j >= 0; j--) {
+			// 将桶里的元素取出来 
+			int index = count[(arr[j] / radix) % 10] - 1;
+			tem[index] = arr[j];
+			count[(arr[j] / radix) % 10]--;
+		}
+		for (int j = 0; j < arr.size(); j++) {
+			arr[j] = tem[j];
+		}
+ 
+		radix *= 10;
+	}
+ 
+}
+
+// 测试函数
+// int main() {
+ 
+// 	vector<int> arr = {61, 17, 29, 22, 34, 60, 72, 21, 50, 1, 62};
+ 
+// 	RadixSort(arr);
+ 
+// 	for (int nums : arr) {
+// 		cout << nums << " ";
+// 	}
+ 
+// 	return 0;
+// }
+```
+
+
+
+### 桶排序
+
+```
+BUCKET-SORT(A)
+	n = A.length()
+	let B[0.. n - 1] be a new array
+	for i = 0 to n - 1
+		make B[i] an empty list
+	for i = 1 to n
+		insert A[i] into list B[(向下取整nA[i])]
+	for i = 0 to n - 1
+		sort list B[i] with insertion sort
+	concatenate the lists B[0], B[1], .. ,B[n - 1] together in order
+```
+
+
+
+```c++
+#pragma once
+
+#include "vector"
+#include "InsertionSort.h"
+
+using namespace std;
+
+int* BucketSort(int *arr, int n) {
+    int i;
+	int maxValue = arr[0];
+	for (i = 1; i < n; i++) 
+		if (arr[i] > maxValue)  // 输入数据的最大值
+			maxValue = arr[i]; 
+	
+	// 设置10个桶，依次0，1，，，9
+	const int bucketCnt = 10;
+	vector<int> buckets[bucketCnt];
+	// 桶的大小bucketSize根据数组最大值确定：比如最大值99， 桶大小10
+	// 最大值999，桶大小100
+	// 根据最高位数字映射到相应的桶，映射函数为 arr[i]/bucketSize
+	int bucketSize = 1;
+	while (maxValue) {		//求最大尺寸 
+		maxValue /= 10;
+		bucketSize *= 10;
+	}
+	bucketSize /= 10;		//桶的个数 
+	// 入桶
+	for (int i=0; i<n; i++) {
+		int idx = arr[i]/bucketSize;			//放入对应的桶 
+		buckets[idx].push_back(arr[i]);
+		// 对该桶使用插入排序(因为数据过少，插入排序即可)，维持该桶的有序性
+		for (int j=int(buckets[idx].size())-1; j>0; j--) {
+			if (buckets[idx][j]<buckets[idx][j-1]) {
+				swap(buckets[idx][j], buckets[idx][j-1]);
+			}
+		}
+	}
+	// 顺序访问桶，得到有序数组
+	for (int i=0, k=0; i<bucketCnt; i++) {
+		for (int j=0; j<int(buckets[i].size()); j++) {
+			arr[k++] = buckets[i][j];
+		}
+	}
+	return arr;
+}
+
+
+// 测试函数
+// int main() {
+ 
+// 	int *arr;
+//     int n = 6;
+//     arr = (int *) malloc (sizeof(int)*n);
+
+//     arr[0] = 4;
+//     arr[1] = 22;
+//     arr[2] = 0;
+//     arr[3] = 244;
+//     arr[4] = 1513;
+//     arr[5] = 1;
+//     arr = BucketSort(arr, n);
+//     for (int i = 0; i < n; ++i) {
+//         cout << arr[i] << " ";
+//     }
+// 	return 0;
+// }
+```
+
+### 遗忘比较交换算法
+
+**比较交换操作**
+
+```
+COMPARE-EXCHANGE(A, i, j)
+	if (A[i] > A[j])
+		exchange A[i] with A[j]
+```
+
+```
+INSERTION-SORT(A)
+	for j = 2 to A.length
+		for i = j - 1 downto 1
+			COMPARTE-EXCHANGE(A, i, i + 1)
+```
+
+```c++
+// 基于遗忘比较交换
+void CompareExchange(vector<int> &A, int i, int j) {
+    if (A[i] > A[j]) {
+        swap(A[i], A[j]);
+    }
+}
+
+void InsertionSort(vector<int> &A) {
+    for (int j = 1; j < A.size(); ++j) {
+        for (int i = j - 1; i >= 0; --i) {
+            CompareExchange(A, i, i + 1);
+        }
+    }
+}
+```
+
