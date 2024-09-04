@@ -36,7 +36,7 @@ int RandomizedSelect02(vector<int> &A, int p, int r, int i) {
         }
     }
 }
-
+ 
 // 测试函数
 // int main() {
 // 	vector<int> A = {5, 2, 8, 10, 4, 9, 3, 7, 6};
