@@ -192,7 +192,7 @@ void move2(SqList *&L) {
         }
     }
 }
-
+ 
 /*
 #include "iostream"
 #include "head/SequentialList.h"
