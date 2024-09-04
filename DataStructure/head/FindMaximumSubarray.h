@@ -26,7 +26,7 @@ void FindMaxCrossingSubarray(vector<int> &A, int low, int mid, int high, int &ma
     }
     sums = left_sum + right_sum;
 }
-
+ 
 void FindMaximumSubarray(vector<int> &A, int low, int high, int &lows, int &highs, int &sums) {
     if (high == low) {
         return;
