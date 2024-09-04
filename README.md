@@ -1418,3 +1418,87 @@ void InsertionSort(vector<int> &A) {
 }
 ```
 
+## 第九章 中位数和顺序统计量
+
+本章将讨论从一个由n个互异的元素构成的集合中选择第i个**顺序统计量**（是指该集合第i小的元素）。定义为如下的**选择问题**：
+
+​	**输入**：一个包含n个（互异的）数的集合A和一个整数i，1<=i<=n。
+
+​	**输出**：元素x属于A，且A中恰好有i-1个其他元素小于它。
+
+### 最小值和最大值
+
+返回最小值
+
+```
+MINIMUM(A)
+	min = A[1]
+	for i = 2 to A.length
+		if min > A[i]
+			min = A[i]
+	return min
+```
+
+```c++
+#pragma once
+
+#include "vector"
+#include "algorithm"
+
+using namespace std;
+
+int Minimum(vector<int> &A) {
+    int Min = A[0];
+    for (int i = 1; i < A.size(); ++i) {
+        Min = min(Min, A[i]);
+    }
+    return Min;
+}
+```
+
+### 期待为线性时间的选择算法
+
+返回第i小的元素
+
+```
+RANDIMUZED-SELECT(A, p, r, i)
+	if p == r
+		return A[p]
+	q = RANDOMIZED-PARTITION(A, p, r)
+	k = q - p + 1
+	if i == k
+		return A[q]
+	else if i < k
+		return RANDIMUZED-SELECT(A, p, q - 1, i)
+	else return RANDIMUZED-SELECT(A, q + 1, r, i - k)
+```
+
+```c++
+int RandomizedSelect01(vector<int> &A, int p, int r, int i) {
+    if (p == r) return A[p];
+    int q = RandomizedPartition(A, p, r);
+    int k = q - p + 1;
+    if (i == k) return A[q];
+    else if (i < k) return RandomizedSelect01(A, p, q - 1, i);
+    else    return RandomizedSelect01(A, q + 1, r, i - k);
+}
+```
+
+基于循环的版本
+
+```c++
+int RandomizedSelect02(vector<int> &A, int p, int r, int i) {
+    while (true) {
+        if (p == r) return A[p];
+        int q = RandomizedPartition(A, p, r);
+        int k = q - p + 1;
+        if (i == k) return A[q];
+        if (i < k)  r = q - 1;
+        else {
+            p = q + 1;
+            i -= k;
+        }
+    }
+}
+```
+
