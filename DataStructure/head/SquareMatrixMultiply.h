@@ -3,7 +3,7 @@
 #include "vector"
 
 using namespace std;
-
+ 
 vector<vector<int>> SquareMatrixMultiply(vector<vector<int>> A, vector<vector<int>> B) {
     int n = A.size();
     vector<vector<int>> C(n, vector<int>(n, 0));
