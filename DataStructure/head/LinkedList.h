@@ -1,7 +1,7 @@
 #include "iostream"
 using namespace std;
 #include "malloc.h"
-
+ 
 /*单链表*/
 typedef int ElemType;
 
