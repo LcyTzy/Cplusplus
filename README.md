@@ -1502,3 +1502,883 @@ int RandomizedSelect02(vector<int> &A, int p, int r, int i) {
 }
 ```
 
+## 第十章 基本数据结构
+
+### 栈和队列
+
+栈和队列都是动态集合。栈实现的是一种**后进先出**策略，栈实现的是一种**先进先出**的策略。
+
+#### 栈
+
+如果试图对一个空栈执行弹出操作，称为栈下溢。如果S.top超过了n，则称为上溢。
+
+```
+STACK-EMPTY(s)
+	if S.top == 0
+		return TRUE
+	else return FALSE
+```
+
+```
+PUSH(S, x)
+	S.top = S.top + 1
+	S[S.top] = x
+```
+
+```
+POP(S)
+	if STACK-EMPTY(S)
+		error "underflow"
+	else S.top = S.top - 1
+		return S[S.top + 1]
+```
+
+#### 队列
+
+```
+QUEUE-EMPTY(Q)
+    if Q.head == Q.tail
+        return true
+    else return false
+```
+
+```
+QUEUE-FULL(Q)
+    if Q.head == Q.tail + 1 or (Q.head == 1 and Q.tail == Q.length)
+        return true
+    else return false
+```
+
+```
+ENQUEUE(Q, x)
+    if QUEUE-FULL(Q)
+        error "overflow"
+    else
+        Q[Q.tail] = x
+        if Q.tail == Q.length
+            Q.tail = 1
+        else Q.tail = Q.tail + 1
+```
+
+```
+DEQUEUE(Q)
+    if QUEUE-EMPTY(Q)
+        error "underflow"
+    else
+        x = Q[Q.head]
+        if Q.head == Q.length
+            Q.head = 1
+        else Q.head = Q.head + 1
+        return x
+```
+
+**双端队列**
+
+```
+HEAD-ENQUEUE(Q, x)
+    if QUEUE-FULL(Q)
+        error "overflow"
+    else
+        if Q.head == 1
+            Q.head = Q.length
+        else Q.head = Q.head - 1
+        Q[Q.head] = x
+```
+
+```
+TAIL-ENQUEUE(Q, x)
+    if QUEUE-FULL(Q)
+        error "overflow"
+    else
+        Q[Q.tail] = x
+        if Q.tail == Q.length
+            Q.tail = 1
+        else Q.tail = Q.tail + 1
+```
+
+```
+HEAD-DEQUEUE(Q)
+    if QUEUE-EMPTY(Q)
+        error "underflow"
+    else
+        x = Q[Q.head]
+        if Q.head == Q.length
+            Q.head = 1
+        else Q.head = Q.head + 1
+        return x
+```
+
+```
+TAIL-DEQUEUE(Q)
+    if QUEUE-EMPTY(Q)
+        error "underflow"
+    else
+        if Q.tail == 1
+            Q.tail = Q.length
+        else Q.tail = Q.tail - 1
+        x = Q[Q.tail]
+        return x
+```
+
+```c++
+#pragma once
+
+#include "malloc.h"
+
+#define MaxSize 50
+typedef int ElemType;
+
+typedef struct {
+    ElemType data[MaxSize]; // 存放栈中的数据元素
+    int top;                // 栈顶元素，即存放栈顶元素在data数组中的下标
+} SqStack;
+
+// 初始化栈
+void InitStack(SqStack *&s) {
+    s = (SqStack *) malloc (sizeof(SqStack));
+    s->top = -1;
+}
+
+// 销毁栈
+void DestroyStack(SqStack *&s) {
+    free(s);
+}
+
+// 判断栈是否为空
+bool StackEmpty(SqStack *s) {
+    return (s->top == -1);
+}
+
+// 进栈
+bool Push(SqStack *&s, ElemType e) {
+    if (s->top == MaxSize - 1) {    // 栈满的情况，即栈上溢出
+        return false;
+    }
+    s->top++;
+    s->data[s->top] = e;
+    return true;
+}
+
+// 出栈
+bool Pop(SqStack *&s, ElemType &e) {
+    if (s->top == -1)
+        return false;
+    e = s->data[s->top];
+    s->top--;
+    return true;
+}
+
+// 取栈顶元素
+bool GetTop(SqStack *s, ElemType &e) {
+    if (s->top == -1) {
+        return false;
+    }
+    e = s->data[s->top];
+    return true;
+}
+
+
+/*链栈*/
+typedef struct linknode {
+    ElemType data;
+    struct linknode * next;
+}LinkStNode;
+
+// 初始化栈
+void InitStack(LinkStNode *&s) {
+    s = (LinkStNode *) malloc (sizeof(LinkStNode));
+    s->next = NULL;
+}
+
+// 销毁栈
+void DestroyStack(LinkStNode *&s) {
+    LinkStNode *pre = s, *p = s->next;
+    while (p != NULL) {
+        free(pre);
+        pre = p;
+        p = pre->next;
+    }
+    free(pre);
+}
+
+// 判空
+bool StackEmpty(LinkStNode *s) {
+    return (s->next == NULL);
+}
+
+// 进栈
+bool Push(LinkStNode *&s, ElemType e) {
+    LinkStNode *p;
+    p = (LinkStNode *) malloc (sizeof(LinkStNode));
+    p->data = e;
+    p->next = s->next;
+    s->next = p;
+    return true;
+}
+
+// 出栈
+bool Pop(LinkStNode *&s, ElemType &e) {
+    LinkStNode *p;
+    if (s->next == NULL) {
+        return false;
+    }
+    p = s->next;
+    e = p->data;
+    s->next = p->next;
+    free(p);
+    return true;
+}
+
+// 取栈顶元素
+bool GetTop(LinkStNode *s, ElemType &e) {
+    if (s->next == NULL)
+        return false;
+    e = s->next->data;
+    return false;
+}
+```
+
+
+
+### 链表
+
+其中的各对象按线性顺序排序。数组的线性排序是由数组下标决定的，与数组不同的是，链表的顺序是由各个对象里的指针决定的。
+
+**双向链表**的每一个元素都是一个对象，每个对象都有一个关键字key和两个指针：next和 prev 。L.head指向链表的第一个元素。如果等于NIL，则链表为空。
+
+#### 链表的搜索
+
+```
+LIST-SEARCH(L, k)
+	x = L.head
+	while x != NIL and x.key != k
+		x = x.next
+	return x
+```
+
+#### 链表的插入
+
+```
+LIST-INSERT(L, x)
+	x.next = L.head
+	if L.head != NIL
+		L.head.prev = x
+	L.head = x
+	x.prev = NIL
+```
+
+#### 链表的删除
+
+```
+LIST-DELECT(L, x)
+	if x.prev != NIL
+		x.prev.next = x.next
+	else L.head = x.next
+	if x.next != NIL
+		x.next.prev = x.prev
+```
+
+#### 哨兵
+
+如果可以忽略表头和表尾处的边界条件，则LIST-DELECT的代码可以更简单些：
+
+```
+LIST-DELECT(L, x)
+	x.prev.next = x.next
+	x.next.prev = x.prev
+```
+
+**哨兵**是一个哑对象，其作用是简化边界条件的处理。
+
+```
+LIST-SEARCH(L, k)
+	x = L.nil.next
+	while x != L.nil and x.key != k
+		x = x.next
+	return x
+```
+
+```
+LIST-INSERT(L, x)
+	x.next = L.nil.next
+	L.nil.next.prev = x
+	L.nil.next = x
+	x.prev = L.nil
+```
+
+#### 练习题
+
+##### 1. 单链表上的动态集合操作insert在O(1)时间内实现
+
+```
+LIST-INSERT(L, x)
+    x.next = L.head
+    L.head = x
+```
+
+##### 2. 用一个单链表L实现一个栈
+
+```
+STACK-EMPTY(L)
+    if L.head == NIL
+        return true
+    else return false
+    
+PUSH(L, x)
+    x.next = L.head
+    L.head = x
+    
+POP(L)
+    if STACK-EMPTY(L)
+        error "underflow"
+    else
+        x = L.head
+        L.head = L.head.next
+        return x
+```
+
+##### 3. 用一个单链表L实现一个队列
+
+```
+QUEUE-EMPTY(L)
+    if L.head == NIL
+        return true
+    else return false
+
+ENQUEUE(L, x)
+    if QUEUE-EMPTY(L)
+        L.head = x
+    else L.tail.next = x
+    L.tail = x
+    x.next = NIL
+
+DEQUEUE(L)
+    if QUEUE-EMPTY(L)
+        error "underflow"
+    else
+        x = L.head
+        if L.head == L.tail
+            L.tail = NIL
+        L.head = L.head.next
+        return x
+```
+
+##### 4. 在有哨兵的search操作中省略对 x != L.nil 的检查
+
+```
+LIST-SEARCH'(L, k)
+    x = L.nil.next
+    L.nil.key = k
+    while x.key != k
+        x = x.next
+    return x
+```
+
+##### 5.使用单向循环链表实现字典操作INSERT,DELETE和SEARCH
+
+```
+LIST-INSERT''(L, x)
+    x.next = L.nil.next
+    L.nil.next = x
+    
+LIST-DELETE''(L, x)
+    prev = L.nil
+    while prev.next != x
+        if prev.next == L.nil
+            error "element not exist"
+        prev = prev.next
+    prev.next = x.next
+    
+LIST-SEARCH''(L, k)
+    x = L.nil.next
+    while x != L.nil and x.key != k
+        x = x.next
+    return x
+```
+
+##### 6. 实现一个含n个元素的单链表的逆转。（时间θ（*n*)，该过程只能使用固定大小的存储空间）
+
+```
+LIST-REVERSE(L)
+    p[1] = NIL
+    p[2] = L.head
+    while p[2] != NIL
+        p[3] = p[2].next
+        p[2].next = p[1]
+        p[1] = p[2]
+        p[2] = p[3]
+    L.head = p[1]
+```
+
+##### 7. 说明如何在每个元素仅使用一个指针x.np的情况下实现双向链表。假设所有指针的值都可视为k为的整型数，且定义x.np = x.next XOR x.prev，即x.next和x.prev的k位异或。（NIL的值用0表示）。
+
+```
+LIST-SEARCH(L, k)
+    prev = NIL
+    x = L.head
+    while x != NIL and x.key != k
+        next = prev XOR x.np
+        prev = x
+        x = next
+    return x
+```
+
+```
+LIST-INSERT(L, x)
+    x.np = NIL XOR L.tail
+    if L.tail != NIL
+        L.tail.np = (L.tail.np XOR NIL) XOR x   // tail.prev XOR x
+    if L.head == NIL
+        L.head = x
+    L.tail = x
+```
+
+```
+LIST-DELETE(L, x)
+    y = L.head
+    prev = NIL
+    while y != NIL
+        next = prev XOR y.np
+        if y != x
+            prev = y
+            y = next
+        else
+            if prev != NIL
+                prev.np = (prev.np XOR y) XOR next  // prev.prev XOR next
+            else L.head = next
+            if next != NIL
+                next.np = prev XOR (y XOR next.np)  // prev XOR next.next
+            else L.tail = prev
+```
+
+```
+LIST-REVERSE(L)
+    tmp = L.head
+    L.head = L.tail
+    L.tail = tmp
+```
+
+```c++
+#pragma once
+
+typedef int ElemType;
+#define MaxSize 50
+
+#include "malloc.h"
+
+typedef struct {
+    ElemType data[MaxSize]; // 存放队中元素
+    int front, rear;        // 队头和队尾的指针
+}SqQueue;
+
+// 初始化
+void InitQueue(SqQueue *&q) {
+    q = (SqQueue *) malloc (sizeof(SqQueue));
+    q->front = q->rear = -1;
+} 
+
+// 销毁
+void DestroyQueue(SqQueue *&q) {
+    free(q);
+}
+
+// 判空
+bool QueueEmpty(SqQueue *q) {
+    return (q->front == q->rear);
+}
+
+// 进队列
+bool enQueue(SqQueue *&q, ElemType e) {
+    if (q->rear == MaxSize - 1) 
+        return false;
+    q->rear++;
+    q->data[q->rear] = e;
+    return true;
+}
+
+// 出队列
+bool deQueue(SqQueue *&q, ElemType &e) {
+    if (q->front == q->rear) {
+        return false;
+    }
+    q->front++;
+    e = q->data[q->front];
+    return true;
+}
+
+/*环形队列*/
+
+// 初始化队列
+void InitQueue01(SqQueue *&q) {
+    q = (SqQueue *) malloc (sizeof(SqQueue));
+    q->front = q->rear = 0;
+}
+
+// 销毁队列
+void DestroyQueue01(SqQueue *&q) {
+    free(q);
+}
+
+// 判空
+bool QueueEmpty01(SqQueue *q) {
+    return (q->front == q->rear);
+}
+
+// 进队列
+bool enQueue01(SqQueue *&q, ElemType e) {
+    if ((q->rear + 1) % MaxSize == q->front)
+        return false;
+    q->rear = (q->rear + 1) % MaxSize;
+    q->data[q->rear] = e;
+    return true;
+}
+
+// 出队列
+bool deQueue01(SqQueue *&q, ElemType &e) {
+    if (q->front == q->rear) 
+        return false;
+    q->front = (q->front + 1) % MaxSize;
+    e = q->data[q->front];
+    return true;
+}
+
+// 求队列中元素的个数
+int Count(SqQueue *q) {
+    return(q->rear - q->rear + MaxSize) % MaxSize;
+}
+
+
+/*链式存储*/
+
+
+typedef struct qnode {
+    ElemType data;
+    struct qnode * next;
+}DataNode;
+
+typedef struct {
+    DataNode * front;
+    DataNode * rear;
+}LinkQuNode;
+
+// 初始化
+void InitQueue(LinkQuNode *&q) {
+    q = (LinkQuNode *) malloc (sizeof(LinkQuNode));
+    q->front = q->rear = NULL;
+}
+
+// 销毁队列
+void DestroyQueue(LinkQuNode *&q) {
+    DataNode *pre = q->front, *p;
+    if (pre != NULL) {
+        p = pre->next;
+        while (p != NULL) {
+            free(pre);
+            pre = p;
+            p = p->next;
+        }
+        free(pre);
+    }
+    free(q);
+}
+
+// 判空
+bool QueueEmpty(LinkQuNode *q) {
+    return (q->rear == NULL);
+}
+
+// 进队列
+bool enQueue(LinkQuNode *&q, ElemType e) {
+    DataNode *p;
+    p = (DataNode *) malloc (sizeof(DataNode));
+    p->data = e;
+    p->next = NULL;
+    if (q->rear == NULL) {
+        q->front = q->rear = p;
+    } else {
+        q->rear->next = p;
+        q->rear = p;
+    }
+    return true;
+}
+
+// 出队列
+bool deQueue(LinkQuNode *&q, ElemType &e) {
+    DataNode *t;
+    if (q->rear == NULL) {
+        return false;
+    }
+    t = q->front;
+    if (q->front == q->rear) {
+        q->front = q->rear = NULL;
+    } else {
+        q->front = q->front->next;
+    }
+    e = t->data;
+    free(t);
+    return true;
+}
+```
+
+
+
+### 指针和对象的实现
+
+本节将会介绍在没有显式的指针数据类型的情况下实现链式数据结构的两种方法。我们将利用数组和数组下标来构建对象的指针。
+
+#### 对象的多数组表示
+
+![](.\picture\屏幕截图 2024-09-05 125028.png)
+
+#### 对象的单数组表示
+
+![](.\picture\屏幕截图 2024-09-05 125515.png)
+
+​	向一个双向链表表示的动态集合中插入一个关键字，就必须分配一个指向该链表表示中尚未利用的对象的指针。因此，有必要对链表表示中尚未利用的对象空间进行管理，使其能够被分配。在某些系统中，由**垃圾收集器**(garbagecollector)负责确定哪些对象是未使用的。然而许多应用非常简单，可由自己负责将未使用的对象返回给存储管理器。我们将以多数组表示的双向
+链表为例，探讨同构对象的分配与释放(或称去分配)问题。
+​	假设多数组表示法中的各数组长度为m，且在某一时刻该动态集合含有n<m个元素。则n个对象代表现存于该动态集合中的元素，而余下的m-n个对象是自由的(free):这些自由对象可用来表示将要插人该动态集合的元素。
+我们把自由对象保存在一个单链表中，称为自由表(free list)。自由表只使用nert 数组，该数组只存储链表中的 next指针。自由表的头保存在全局变量 free中。当由链表L表示的动态集合非空时，自由表可能会和链表L相互交错，如图10-7所示。注意，该表示中的每个对象不是在链表L中，就在自由表中，但不会同时属于两个表。
+​	自由表类似于一个栈:下一个被分配的对象就是最后被释放的那个。我们可以分别利用栈操作 PUSH 和 POP的链表实现形式来实现分配和释放对象的过程。假设下述过程中的全局变量free 指向自由表的第一个元素。
+
+```
+ALLOCATRE-OBJECT()
+	if free == NIL
+		error "out of space"
+	else x = free
+		free = x.next
+		return x
+		
+FREE-OBJECT(x)
+	x.next = free
+	free = x
+```
+
+### 有根树的表示
+
+#### 二叉树
+
+> x.p	父节点
+>
+> x.left	左孩子
+>
+> x.right	右孩子
+
+#### 分支无限制的有根树
+
+有一个巧妙的方法可以用来表示孩子数任意的树。**左孩子右兄弟表示法**只有两个指针：
+
+- x.left-child 指向结点x最左边的孩子结点
+- x.right-sibling 指向x右侧相邻的兄弟结点
+
+如果结点x没有孩子结点，则x.left-child=NIL；如果结点x是其父结点的最右孩子，则x.right-sibling=NIL。
+
+#### 练习
+
+##### 1. 给定一个n结点的二叉树，写出一个O(n)时间的递归过程，将该树每个结点的关键字输出。
+
+```
+PRINT-BINARY-TREE(T)
+    PRINT-BINARY-TREE-AUX(T.root)
+
+PRINT-BINARY-TREE-AUX(x)
+    if node != NIL
+        PRINT-BINARY-TREE-AUX(x.left)
+        print x.key
+        PRINT-BINARY-TREE-AUX(x.right)
+```
+
+```c++
+void PrintBinaryTreeAux01(TreeNode *root) {
+    if (root == nullptr) {
+        return;
+    }
+    cout << root->value << endl;
+    PrintBinaryTreeAux01(root->left);
+    PrintBinaryTreeAux01(root->right);
+}
+
+void PrintBinaryTreeAux02(TreeNode *root) {
+    if (root == nullptr) {
+        return;
+    }
+    PrintBinaryTreeAux02(root->left);
+    cout << root->value << endl;
+    PrintBinaryTreeAux02(root->right);
+}
+
+void PrintBinaryTreeAux03(TreeNode *root) {
+    if (root == nullptr) {
+        return;
+    }
+    PrintBinaryTreeAux03(root->left);
+    PrintBinaryTreeAux03(root->right);
+    cout << root->value << endl;
+}
+```
+
+##### 2. 非递归
+
+```
+PRINT-BINARY-TREE(T, S)
+    PUSH(S, T.root)
+    while !STACK-EMPTY(S)
+        x = S[S.top]
+        while x != NIL      // store all nodes on the path towards the leftmost leaf
+            PUSH(S, x.left)
+            x = S[S.top]
+        POP(S)              // S has NIL on its top, so pop it
+        if !STACK-EMPTY(S)  // print this nodes, leap to its in-order successor
+            x = POP(S)
+            print x.key
+            PUSH(S, x.right)
+```
+
+```
+vector<int> preorderTraversal01(TreeNode* root) {
+    vector<int> v;
+    stack<TreeNode*> st;
+    TreeNode *cur = root;
+    while (cur || st.size() != 0) {
+            //访问左路节点
+        while (cur) {
+            v.push_back(cur->value);
+            st.push(cur);
+            cur=cur->left;
+        }
+        //取栈顶
+        TreeNode*stop=st.top();
+        st.pop();
+        //左路节点的右子树
+        cur=stop->right;
+    }
+    return v;
+}
+
+vector<int> preorderTraversal02(TreeNode* root) {
+    vector<int> v;
+    stack<TreeNode*> st;
+    TreeNode *cur = root;
+    while (cur || st.size() != 0) {
+            //访问左路节点
+        while (cur) {
+            st.push(cur);
+            cur=cur->left;
+        }
+        //取栈顶
+        TreeNode*stop=st.top();
+        v.push_back(cur->value);
+        st.pop();
+        //左路节点的右子树
+        cur=stop->right;
+    }
+    return v;
+}
+
+vector<int> preorderTraversal03(TreeNode* root) {
+    vector<int> v;
+    stack<TreeNode*> st;
+    TreeNode *cur = root;
+    TreeNode *prev = nullptr;
+    while (cur || st.size() != 0) {
+            //访问左路节点
+        while (cur) {
+            st.push(cur);
+            cur=cur->left;
+        }
+        //取栈顶
+        TreeNode*stop=st.top();
+        if (stop->right == nullptr || stop->right == prev) {
+            v.push_back(cur->value);
+            st.pop();
+            prev = stop;
+        } else {
+            cur=stop->right;
+        }
+    }
+    return v;
+}
+```
+
+##### 3. 编写一个O(n)过程，该过程使用*n*节点，其中树使用 left-child， right-sibling 表示形式存储。
+
+```
+PRINT-LCRS-TREE(T)
+    x = T.root
+    if x != NIL
+        print x.key
+        lc = x.left-child
+        if lc != NIL
+            PRINT-LCRS-TREE(lc)
+            rs = lc.right-sibling
+            while rs != NIL
+                PRINT-LCRS-TREE(rs)
+                rs = rs.right-sibling
+```
+
+##### 4. 编写一个O(n) 非递归过程，给定一个*n*-node 二叉树，打印出每个节点的 key。在操作过程中，不要在树本身之外使用恒定的额外空间，并且不要修改树，即使是临时的。
+
+```
+PRINT-KEY(T)
+    prev = NIL
+    x = T.root
+    while x != NIL
+        if prev = x.parent
+            print x.key
+            prev = x
+            if x.left
+                x = x.left
+            else
+                if x.right
+                    x = x.right
+                else 
+                    x = x.parent
+        else if prev == x.left and x.right != NIL
+                prev = x
+                x = x.right
+        else
+                prev = x
+                x = x.parent
+```
+
+##### 5. 可合并堆
+
+```
+EXTRACT-MIN(L)
+    min = MINIMIM(L)
+    linearly scan for the second smallest element, located in position i
+    L.head.key = L[i]
+    L[i].key = L[L.length].key
+    DELETE(L, L[L.length])
+    MIN-HEAPIFY(L[i], i)
+    return min
+```
+
+```
+MIN-HEAPIFY(L[i], i)
+    l = L[2i].key
+    r = L[2i + 1].key
+    p = L[i].key
+    smallest = i
+    if L[2i] != NIL and l < p
+        smallest = 2i
+    if L[2i + 1] != NIL and r < L[smallest]
+        smallest = 2i + 1
+    if smallest != i
+        exchange L[i] with L[smallest]
+        MIN-HEAPIFY(L[smallest], smallest])
+```
+
+```
+UNION(A, B)
+    if A.head == NIL
+        return B
+    x = A.head
+    while B.head != NIL
+        if B.head.key ≤ x.key
+            INSERT(B, x.key)
+            x.key = B.head.key
+            DELETE(B, B.head)
+        x = x.next
+    return A
+```
+
