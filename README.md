@@ -2382,3 +2382,364 @@ UNION(A, B)
     return A
 ```
 
+## 第十一章 散列表
+
+​	散列表是普通数组概念的推广。由于对普通数组可以直接寻址，使得能在O(1)时间内访问数组中的任意位置。
+
+### 11.1. 直接寻址表
+
+​	当关键字的全域U比较小时，直接寻址法是一种简单而有效的技术。
+
+​	为表示动态集合，我们用一个数组，或称为**直接寻址表**，记为T[0..m-1]，其中每个位置，或称为**槽**。如果该集合中没有关键字为k的元素，则T[k]=Nil。
+
+​	几个字典操作实现起来比较简单：
+
+```
+DIRECT-ADDRESS-SEARCH(T, k)
+	return T[k]
+	
+DIRECT-ADDRESS-INSERT(T, x)
+	T[x.key] = x
+
+DIRECT-ADDRESS-DELETE(T, x)
+	T[x.key] = NIL
+```
+
+### 11.2. 散列表
+
+​	在散列方式下，该元素存放在槽h(k)中；即利用散列函数，由关键字计算出槽的位置。
+
+​	两个关键字可能映射到同一个槽中。我们称这种情况为**冲突**。
+
+**通过链接法解决冲突**
+
+​	把散列到同一个槽中的所有元素都放在一个链表中。
+
+```
+CHAINED-HASH-INSERT(T, x)
+	insert x at the head of list T[h(x.key)]
+
+CHAINED-HASH-SEARCH(T, k)
+	search for an element with key k in list T[h(k)]
+
+CHAINED-HASH-DELECT(T, x)
+	delete x from the list T[h(x.key)] 
+```
+
+```c++
+#pragma once
+#include "malloc.h"
+#include "iostream"
+
+using namespace std;
+
+typedef int KeyType;
+
+typedef struct node {
+    KeyType key;
+    struct node *next;
+} NodeType;
+
+typedef struct {
+    NodeType *firstp;
+} HashTable;
+
+
+// 插入及建表
+void InsertHT(HashTable ha[], int &n, int m, KeyType k) {
+    int adr;
+    adr = k % m;
+    NodeType *q;
+    q = (NodeType *) malloc (sizeof(NodeType));
+    q->key = k;
+    q->next = NULL;
+    if (ha[adr].firstp == NULL) {
+        ha[adr].firstp = q;
+    } else {
+        q->next = ha[adr].firstp;
+        ha[adr].firstp = q;
+    }
+    ++n;
+}
+
+void CreateHT(HashTable ha[], int &n, int m, KeyType keys[], int total) {
+    for (int i = 0; i < m; ++i) {
+        ha[i].firstp = NULL;
+    }
+    n = 0;
+    for (int i = 0; i < total; ++i) {
+        InsertHT(ha, n, m, keys[i]);
+    }
+}
+
+// 删除
+bool DelectHT(HashTable ha[], int &n, int m, KeyType k) {
+    int adr;
+    adr = k % m;
+    NodeType *q, *preq;
+    q = ha[adr].firstp;
+    if (q == NULL) {
+        return false;
+    }
+    if (q->key == k) {
+        ha[adr].firstp = q->next;
+        free(q);
+        n--;
+        return true;
+    }
+    preq = q;
+    q = q->next;
+    while (q != NULL && q->key != k) {
+        preq = q;
+        q = q->next;
+    }
+    if (q != NULL) {
+        preq->next = q->next;
+        free(q);
+        --n;
+        return true;
+    }
+    else return false;
+}
+
+// 查找
+void SearchHT(HashTable ha[], int m, KeyType k) {
+    int cnt = 0, adr;
+    adr = k % m;
+    NodeType *q;
+    q = ha[adr].firstp;
+    while (q != NULL) {
+        cnt++;
+        if (q->key == k)
+            break;
+        q = q->next;
+    }
+    if (q != NULL) 
+        cout << "成功：关键字 " << k << " ，比较 " << cnt << " 次。" << endl;
+    else 
+        cout << "失败：关键字 " << k << " ，比较 " << cnt << " 次。" << endl;
+}
+
+// 性能分析
+void ASL(HashTable ha[], int n, int m) {
+    int succ = 0, unsucc = 0, s;
+    NodeType *q;
+    for (int i = 0; i < m; ++i) {
+        s = 0;
+        q = ha[i].firstp;
+        while (q != NULL) {
+            q = q->next;
+            ++s;
+            succ += s;
+        }
+        unsucc += s;
+    }
+    cout << "成功情况下 ASL(" << n << ") = " << succ * 1.0 / n << endl;
+    cout << "不成功情况下 ASL(" << n << ") = " << succ * 1.0 / n << endl;
+}
+```
+
+### 11.3. 散列函数
+
+#### 11.3.1. 除法散列法
+
+散列函数为：
+$$
+h(k)=k\space modm
+$$
+m 不应为2的幂。一个不太接近2的整数幂的素数，常常是m的一个较好的选择。
+
+#### 11.3.2. 乘法散列法
+
+$$
+h(k)=[m(kA\space mod1)]
+$$
+
+[]代表向下取整，kAmod1 是取kA的小数部分
+
+乘法散列法的一个优点就是对m的选择不是特别关键，一般选择它为2的某个幂次。
+
+#### 11.3.3. 全域散列法
+
+随机地选择散列函数，使之独立于要存储的关键字。这种方法称之为全域散列。
+
+#### 11.3.4. 开放寻址法
+
+在开放寻址法中，所有的元素都存放在散列表里。（探查出空位）。
+
+```
+HASH-INSERT(T, k)
+	i = 0
+	repeat
+		j = h(k, i)
+		if T[j] == NIL
+			T[j] = k
+			return j
+		else i = i + 1
+	until i == m
+	error "hash table overflow"
+```
+
+```
+HASH-SEARCH(T, k)
+	i = 0
+	repeat
+		j = h(k, i)
+		if T[j] == k
+			return j
+		i = i + 1
+	until T[j] == NIL or i == m
+	return NIL
+```
+
+```c++
+#pragma once
+
+#include "malloc.h"
+#include "iostream"
+
+using namespace std;
+
+#define NULLKEY -1
+typedef int KeyType;
+typedef struct {
+    KeyType key;
+    int count;
+} HashTable;
+
+void InsertHT(HashTable ha[], int &n, int m, int p, KeyType k) {
+    int i, adr;
+    adr = k % p;
+    if (ha[adr].key == NULLKEY) {
+        ha[adr].key = k;
+        ha[adr].count = 1;
+    } else {
+        int cnt = 1;
+        do {
+            adr = (adr + 1) % m;
+            ++cnt;
+        } while (ha[adr].key != NULLKEY);
+        ha[adr].key = k;
+        ha[adr].count = cnt;
+    }
+    ++n;
+}
+
+void CreateHT(HashTable ha[], int &n, int m, int p, KeyType keys[], int total) {
+    for (int i = 0; i < m; ++i) {
+        ha[i].key = NULLKEY;
+        ha[i].count = 0;
+    }
+    n = 0;
+    for (int i = 0; i < total; ++i) {
+        InsertHT(ha, n, m, p, keys[i]);
+    }
+}
+
+bool DeleteHT(HashTable ha[], int &n, int m, int p, KeyType k) {
+    int adr;
+    adr = k % p;
+    while (ha[adr].key != NULLKEY && ha[adr].key != k)
+        adr = (adr + 1) % m;
+    if (ha[adr].key == k) {
+        int j = (adr + 1) % m;
+        while (ha[j].key != NULLKEY && ha[j].key % p == k % p) {
+            ha[(j - 1 + m) % m].key = ha[j].key;
+            j = (j + 1) % m;
+        }
+        ha[(j - 1 + m) % m].key = NULLKEY;
+        ha[(j - 1 + m) % m].count = 0;
+        --n;
+        return true;
+    } else return false;
+}
+
+
+void SearchHT(HashTable ha[], int m, int p, KeyType k) {
+    int cnt = 1, adr;
+    adr = k % p;
+    while (ha[adr].key != NULLKEY && ha[adr].key != k) {
+        cnt++;
+        adr = (adr + 1) % m;
+    }
+    if (ha[adr].key == k) 
+        cout << "成功：关键字 " << k << " ，比较 " << cnt << " 次。" << endl;
+    else 
+        cout << "失败：关键字 " << k << " ，比较 " << cnt << " 次。" << endl;
+}
+
+void ASL(HashTable ha[], int n, int m, int p) {
+    int i, j;
+    int succ = 0, unsucc = 0, s;
+    for (i = 0; i < m; ++i) {
+        if (ha[i].key != NULLKEY) {
+            succ += ha[i].count;
+        }
+    }
+    cout << "成功情况下 ASL(" << n << ") = " << succ * 1.0 / n << endl;
+    for (i = 0; i < p; ++i) {
+        s = 1;
+        j = i;
+        while (ha[j].key != NULLKEY) {
+            ++s;
+            j = (j + 1) % m;
+        } 
+        unsucc += s;
+    }
+    cout << "不成功情况下 ASL(" << n << ") = " << succ * 1.0 / n << endl;
+}
+```
+
+
+
+##### 线性探查
+
+散列函数为
+$$
+h(k, i) = (h^{'}(k) + i)mod\space m
+$$
+
+##### 二次探查
+
+散列函数为
+$$
+h(k,i)=(h^{'}(k)+c_1i+c_2i^2)mod\space m
+$$
+
+##### 双重散列
+
+散列函数为
+$$
+h(k, i) = (h_1(k)+ih_2(k))mod\space m
+$$
+
+```
+HASH-DELETE(T, k)
+    i = 0
+    repeat
+        j = h(k, i)
+        if T[j] == k
+            T[j] = DELETE
+            return j
+        else i = i + 1
+    until T[j] == NIL or i == m
+    error "element not exist"
+```
+
+```
+HASH-INSERT(T, k)
+    i = 0
+    repeat
+        j = h(k, i)
+        if T[j] == NIL or T[j] == DELETE
+            T[j] = k
+            return j
+        else i = i + 1
+    until i == m
+    error "hash table overflow"
+```
+
+#### 11.3.5.  完全散列表
+
+散列表里面套散列表
+
