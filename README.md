@@ -2743,3 +2743,456 @@ HASH-INSERT(T, k)
 
 散列表里面套散列表
 
+## 第十二章 二叉搜索树
+
+```c++
+typedef int KeyType;
+typedef int InfoType;
+typedef struct node {
+    KeyType key;
+    InfoType data;
+    struct node *lchild, *rchild;
+}BSTNode;
+```
+
+```c++
+BSTNode* CreateBST(KeyType a[], int n) {
+    BSTNode *bt = NULL;
+    int i = 0;
+    while (i < n) {
+        bt = InsertBST(bt, a[i]);
+        ++i;
+    }
+    return bt;
+}
+```
+
+
+
+### 12.1. 什么是二叉搜索树
+
+一颗二叉搜索树是以一颗二叉树来组织的。
+
+中序遍历
+
+```
+INORDER-TREE-WALK(x)
+	if x != NIL
+		INORDER-TREE-WALK(x.left)
+		print x.key
+		INORDER-TREE-WALK(x.right)
+```
+
+```
+INORDER-TREE-WALK(T)
+	let S be an empty stack
+	current = T.root
+	done = 0
+	while !done
+		if current != NIL
+			PUSH(S, current)
+			current = current.left
+		else 
+			if !S.EMPTY()
+				current = POP(S)
+				print curent
+				current = current.right
+			else done = 1
+```
+
+先序遍历
+
+```
+PREORDER-TREE-WALK(x)
+	if x != NIL
+		print x.key
+		PREORDER-TREE-WALK(x.left)
+		PREORDER-TREE-WALK(x.right)
+```
+
+后序遍历
+
+```
+POSTORDER-TREE-WALK(x)
+    if x != NIL
+        POSTORDER-TREE-WALK(x.left)
+        POSTORDER-TREE-WALK(x.right)
+        print x.key
+```
+
+### 12.2. 查询二叉搜索树
+
+#### 查找
+
+```
+TREE-SEARCH(x, k)
+	if x == NIL or k == x.key
+		return x
+	if k < x.key
+		return TREE-SEARCH(x.left, k)
+	else return TREE-SEARCH(x,right, k)
+```
+
+```
+ITERATIVE-TREE-SEARCH(x, k)
+	while x != NIL and k != x.key
+		if k < x.key
+			x = x.left
+		else x = x.right
+	return x
+```
+
+```c++
+BSTNode* SearchBST(BSTNode *bt, KeyType k) {
+    if (bt == NULL || bt->key == k)     return bt;
+    if (k < bt->key)    return SearchBST(bt->lchild, k);
+    else    return SearchBST(bt->rchild, k);
+}
+
+BSTNode* SearchBST1(BSTNode *bt, KeyType k) {
+    BSTNode *p = bt;
+    while (p != NULL) {
+        if (p->key == k)    break;
+        else if (k < p->key)    p = p->lchild;
+        else    p = p->rchild;
+    }
+    return p;
+}
+```
+
+
+
+#### 最大关键字元素和最小关键字元素
+
+```
+TREE-MINIMUM(x)
+	while x.left != NIL
+		x = x.left
+	return x
+```
+
+```
+TREE-MINIMUM(x)
+    if x.left != NIL
+        return TREE-MINIMUM(x.left)
+    else return x
+```
+
+```
+TREE-MAXIMUM(x)
+	while x.right != NIL
+		x = x.right
+	return x
+```
+
+```
+TREE-MAXIMUM(x)
+    if x.right != NIL
+        return TREE-MAXIMUM(x.right)
+    else return x
+```
+
+```
+KeyType maxnode(BSTNode *p) {
+    while (p->rchild != NULL) {
+        p = p->rchild;
+    }
+    return p->data;
+}
+
+KeyType minnode(BSTNode *p) {
+    while (p->lchild != NULL) {
+        p = p->lchild;
+    }
+    return p->data;
+}
+
+
+
+void maxminnode(BSTNode *p) {
+    if (p != NULL) {
+        if (p->lchild != NULL) 
+            cout << "左子树的最大结点为 " << maxnode(p->lchild) << endl;
+        if (p->rchild != NULL) 
+            cout << "左子树的最大结点为 " << maxnode(p->lchild) << endl;
+    }
+}
+```
+
+
+
+#### 后继和前驱
+
+```
+TREE-SUCCESSOR(x) 
+	if x.right != NIL
+		return TREE-MINIMUM(x.right)
+	y = x.p
+	while y != NIL and x == y.right
+		x = y
+		y = y.p
+	return y
+```
+
+```
+TREE-PREDECESSOR(x)
+    if x.left != NIL
+        return TREE-MAXIMUM(x.left)
+    y = x.p
+    while y != NIL and x == y.left
+        x = y
+        y = y.p
+    return y
+```
+
+### 12.3. 插入和删除
+
+#### 插入
+
+```
+TREE-INSERT(T, z)
+	y = NIL
+	x = T.root
+	while x != NIL
+		y = x
+		if z.key < x.key
+			x = x.left
+		else x = x.right
+	z.p = y
+	if y == NIL
+		T.root = z
+	elseif z.key < y.key
+		y.left = z
+	else y.right = z
+```
+
+```
+RECURSIVE-TREE-INSERT(T, z)
+    if T.root == NIL
+        T.root = z
+    else INSERT(NIL, T.root, z)
+
+INSERT(p, x, z)
+    if x == NIL
+        z.p = p
+        if z.key < p.key
+            p.left = z
+        else p.right = z
+    else if z.key < x.key
+        INSERT(x, x.left, z)
+    else INSERT(x, x.right, z)
+```
+
+```c++
+BSTNode* InsertBST(BSTNode *bt, KeyType k) {
+    if (bt == NULL) {
+        bt = (BSTNode *)malloc(sizeof(BSTNode));
+        bt->key = k;
+        bt->lchild = bt->rchild = NULL;
+    } else if (k < bt->key) {
+        bt->lchild = InsertBST(bt, k);
+    } else if (k > bt->key) {
+        bt->rchild = InsertBST(bt, k);
+    }
+    return bt;
+}
+```
+
+
+
+#### 删除
+
+有三种基本情况：
+
+- 如果z没有孩子结点，那么只是简单的将它删除，并修改它的父结点，用NIL作为孩子来替换z。
+- 如果只有一个孩子结点，那么将这个孩子提升到树中z的位置上，并修改z的父结点，用z的孩子来替换z。
+- 如果有两个孩子，那么找z的后继y（一定在z的右子树中），并让y占据树中z的位置。z的原来右子树部分变成y的新的右子树，并且z的左子树称为y的新左子树。
+
+![](.\picture\屏幕截图 2024-09-10 130351.png)
+
+![](.\picture\屏幕截图 2024-09-10 130418.png)
+
+```
+TRANSPLANT(T, u, v)
+	if u.p == NIL
+		T.root = v
+	elseif u == u.p.left
+		u.p.left = v
+	else u.p.right = v
+	if v != NIL
+		v.p = u.p
+```
+
+```
+TREE-DELECT(T, z)
+	if z.left == NIL
+		TRANSPLANT(T, z, z.right)
+	elseif z.right == NIL
+		TRANSPLANT(T, z, z.left)
+	else y = TREE-MINIMUM(z.right)
+		if y.p != z
+			TRANSPLANT(T, y, y.right)
+			y.right = z.right
+			y.right.p = y
+			TRANSPLANT(T, z, y)
+			y.left = z.left
+			y.left.p = y
+```
+
+递归
+
+```
+RECURSIVE-TREE-INSERT(T, z)
+    if T.root == NIL
+        T.root = z
+    else INSERT(NIL, T.root, z)
+    
+INSERT(p, x, z)
+    if x == NIL
+        z.p = p
+        if z.key < p.key
+            p.left = z
+        else p.right = z
+    else if z.key < x.key
+        INSERT(x, x.left, z)
+    else INSERT(x, x.right, z)
+```
+
+假设为每个结点换一个设计，属性 x.p 指向x的双亲，属性 x.succ 指向x的后继。
+
+```
+PARENT(T, x)
+    if x == T.root
+        return NIL
+    y = TREE-MAXIMUM(x).succ
+    if y == NIL
+        y = T.root
+    else
+        if y.left == x
+            return y
+        y = y.left
+    while y.right != x
+        y = y.right
+    return y
+```
+
+```
+INSERT(T, z)
+    y = NIL
+    x = T.root
+    pred = NIL
+    while x != NIL
+        y = x
+        if z.key < x.key
+            x = x.left
+        else
+            pred = x
+            x = x.right
+    if y == NIL
+        T.root = z
+        z.succ = NIL
+    else if z.key < y.key
+        y.left = z
+        z.succ = y
+        if pred != NIL
+            pred.succ = z
+    else
+        y.right = z
+        z.succ = y.succ
+        y.succ = z
+```
+
+```
+TRANSPLANT(T, u, v)
+    p = PARENT(T, u)
+    if p == NIL
+        T.root = v
+    else if u == p.left
+        p.left = v
+    else
+        p.right = v
+```
+
+```
+TREE-PREDECESSOR(T, x)
+    if x.left != NIL
+        return TREE-MAXIMUM(x.left)
+    y = T.root
+    pred = NIL
+    while y != NIL
+        if y.key == x.key
+            break
+        if y.key < x.key
+            pred = y
+            y = y.right
+        else
+            y = y.left
+    return pred
+```
+
+```
+DELETE(T, z)
+    pred = TREE-PREDECESSOR(T, z)
+    pred.succ = z.succ
+    if z.left == NIL
+        TRANSPLANT(T, z, z.right)
+    else if z.right == NIL
+        TRANSPLANT(T, z, z.left)
+    else
+        y = TREE-MIMIMUM(z.right)
+        if PARENT(T, y) != z
+            TRANSPLANT(T, y, y.right)
+            y.right = z.right
+        TRANSPLANT(T, z, y)
+        y.left = z.left
+```
+
+```c++
+BSTNode* DeleteBST(BSTNode *bt, KeyType k) {
+    if (bt == NULL) return bt;
+    BSTNode *p = bt;
+    BSTNode *f = NULL;
+    while (p != NULL) {
+        if (p->key == k)    break;
+        f = p;
+        if (k < p->key)     p = p->lchild;
+        else                p = p->rchild;
+    }
+    if (p == NULL)  return bt;
+    if (p->lchild == NULL && p->rchild == NULL) {
+        if (p == bt)    bt = NULL;
+        else {
+            if (f->lchild == p) f->lchild = NULL;
+            else f->rchild = NULL;
+        }
+        free(p);
+    } else if (p->rchild == NULL) {
+        if (f == NULL) bt = bt->lchild;
+        else {
+            if (f->lchild == p) f->lchild = p->lchild;
+            else f->rchild = p->lchild;
+        }
+        free(p);
+    } else if (p->lchild == NULL) {
+        if (f == NULL) bt = bt->rchild;
+        else {
+            if (f->lchild == p) f->lchild = p->rchild;
+            else f->rchild = p->rchild;
+        }
+        free(p);
+    } else {
+        BSTNode *q = p->lchild;
+        f = p;
+        while (q->rchild != NULL) {
+            f = q;
+            q = q->rchild;
+        }
+        p->key = q->key;
+        if (q == f->lchild) f->lchild = q->lchild;
+        else f->rchild = q->lchild;
+        free(q);
+    }
+    return bt;
+}
+```
+
