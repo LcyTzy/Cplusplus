@@ -3196,3 +3196,164 @@ BSTNode* DeleteBST(BSTNode *bt, KeyType k) {
 }
 ```
 
+## 第13章 红黑树
+
+红黑树是众多“平衡”搜索树中的一种，可以保证在最坏情况下基本动态集合的操作的时间复杂度为O(lgn)。
+
+### 红黑树性质
+
+- 每个结点或是红色，或是黑色。
+- 根节点是黑色的
+- 每个叶节点(NIL)是黑色的
+- 如果一个结点是红色的，则它的两个子节点都是黑色的
+- 对每个结点，从该节点到其所有后代叶节点的简单路径上，均包含相同数目的黑色节点。
+
+### 旋转
+
+指针结构的修改是通过旋转来完成的。
+
+![](.\picture\屏幕截图 2024-09-11 190511.png)
+
+```
+LEFT-ROTATE(T, x)
+	y = x.right
+	x.right = y.left
+	if y.left != T.nil
+		y.left.p = x
+	y.p = x.p
+	if x.p == T.nil
+		T.root = y
+	elseif x == x.p.left
+		x.p.left = y
+	else x.p.right = y
+		y.left = x
+		x.p = y
+```
+
+```
+RIGHT-ROTATE(T, y)
+    x = y.left
+    y.left = x.right
+    if x.right != T.nil
+        x.right.p = y
+    x.p = y.p
+    if y.p == T.nil
+        T.root = x
+    else if y == y.p.right
+        y.p.right = x
+    else y.p.left = x
+    x.right = y
+    y.p = x
+```
+
+### 插入
+
+```
+RB-INSERT(T, x)
+	y = T.nil
+	x = T.root
+	while x != T.nil
+		y = x
+		if x.key < x.key
+			x = x.left
+		else x = x.right
+	x.p = y
+	if y == T.nil
+		T.root = x
+	elseif x.key < y.key
+		y.left = x
+	else y.right = x
+	x.left = T.nil
+	x.right = T.nil
+	x.color = RED
+	RB-INSERT-FIXUP(T, x)
+```
+
+```
+RB-INSERT-FIXUP(T, x)
+	while z.p.color == RED
+		if z.p == z.p.p. left
+			y = z.p.p.right
+			if y.color == RED
+				z.p.color = BLACK
+				y.color = BLACK
+				z.p.p.color = RED
+				z = z.p.p
+			else if z == z.p.right
+				z = z.p
+				Left-ROTATE(T, z)
+			z.p.color = BLACK
+			z.p.p.color = RED
+			RIGHT-ROTATE(T, z.p.p)
+		else(same as then clause with "right" and "left" exchanged)
+	T.root.color = BLACK
+```
+
+![](.\picture\屏幕截图 2024-09-11 192232.png)
+
+### 删除
+
+```
+RB-TRANSPLANT(T, u, v)
+	if u.p == T.nil
+		T.root = v
+	elseif u == u.p.left
+		u.p.left = v
+	else u.p.right = v
+	v.p = u.p
+```
+
+```
+RB-DELETE(T，z)
+	y = z
+	y-original-color = y.color
+	if z.left == T.nil
+		x = z.right
+		RB-TRANSPLANT(T,z,z.right)
+	elseif z.right == T.nil
+		x = z.left
+		RB-TRANSPLANT(T, z, z.left)
+	else y = TREE-MINIMUM(z.right)
+		y-original-color = y.color
+		x = y.right
+		if y.p == z
+			x.p = y
+		else RB-TRANSPLANT(T, y, y.right)
+			y.right = z.right
+			y.right.p = y
+		RB-TRANSPLANT(T, z, y)
+		y.left = z.le.ft
+		y.left.p = y
+		y.color = z.color
+	if y-original-color == BLACK
+		RB-DELETE-FIXUP(T, x)
+```
+
+```
+RB-DELETE-FIXUP(T, x)
+	while x != T.root and x.color == BLACK
+	if x == x.p.left
+		w = x.p.right
+		if w.color == RED
+			w.color = BLACK
+			x.p.color = RED
+			LEFT-ROTATE(T, x.p)
+			w = x.p.right
+		if w.left.color == BLACK and w.right.color == BLACK
+			w.color = RED
+			x = x.p
+		else if w.right.color == BLACK
+			w.left.color = BLACK
+			w.color = RED
+			RIGHT-ROTATE(T,w)
+			w = x.p.right
+		w.color = x.p.color
+		x.p.color = BLACK
+		w.right.color = BLACK
+		LEFT-ROTATE(T, x.p)
+		x = T.root
+		else (same as then clause with “right” and “left” exchanged)
+	x.color=BLACK
+```
+
+**csdn[讲的不错的](https://blog.csdn.net/weixin_75128035/article/details/141161705)**
