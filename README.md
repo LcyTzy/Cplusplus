@@ -1,3 +1,7 @@
+[TOC]
+
+
+
 # 算法导论
 
 ## 第二章 算法基础
@@ -3357,3 +3361,245 @@ RB-DELETE-FIXUP(T, x)
 ```
 
 **csdn[讲的不错的](https://blog.csdn.net/weixin_75128035/article/details/141161705)**
+
+## 第14章 数据结构的扩张
+
+## 第15章 动态规划
+
+动态规划与分治方法相似，都是通过组合子问题的解来求解原问题。
+
+**分治算法**将问题划分为互不相交的子问题，递归地求解子问题，再将它们的解组合起来，求出原问题的解。**动态规划**应用于子问题重叠的情况，即不同的子问题具有公共的子子问题。
+
+**动态规划**通常用来求解**最优化子问题**。
+
+4个步骤来设计一个动态规划算法：
+
+- 刻划一个最优解的结构特征
+- 递归地定义最优解的值
+- 计算最优解的值，通常采用自底向上的方法
+- 利用计算出的信息构造一个最优解
+
+### 15.1. 钢条切割
+
+假定我们知道Serling公司出售一段长度为`i`英寸的钢条的价格为pi (i = 1, 2, ..., 单位为美元)，钢条的长度均为整英寸。价格表：
+
+| 长度i  | 1    | 2    | 3    | 4    | 5    | 6    | 7    | 8    | 9    | 10   |
+| ------ | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- |
+| 价格pi | 1    | 5    | 8    | 9    | 10   | 17   | 17   | 20   | 24   | 30   |
+
+对于上述案例，我们可以观察所有最优收益值ri (i = 1, 2, ..., 10)及对应的最优切割方案：
+
+​	r1 = 1，切割方案 1 = 1
+
+​	r2 = 5，切割方案 2 = 2
+
+​	r3 = 8，切割方案 3 = 3
+
+​	r4 = 10，切割方案 4 = 2 + 2
+
+​	r5 = 13，切割方案 5 = 2 + 3
+
+​	r6 = 17，切割方案 6 = 6
+
+​	r7 = 18，切割方案 7 = 1 + 6 或 7 = 2 + 2 + 3
+
+​	r8 = 22，切割方案 8 = 2 + 6
+
+​	r9 = 25，切割方案 9 = 3 + 6
+
+​	r10 = 30，切割方案 10 = 10
+
+​	更一般的，对于rn(n >= 1)，我们可以用更短的钢条最优切割收益来描述它：
+$$
+r_n=max(p_n,r_1 + r_{n- 1},r_2+r_{n-2},...,r_{n - 1}+r_{1})
+$$
+​	我们称钢条切割问题满足**最优子结构**性质：问题的最优解由相关子问题的最优解组合而成，而这些子问题可以独立求解。
+
+​	还存在一种相似的但更为简单的递归求解方法：我们将钢条从左边切割下长度为`i`的一段，只对右边剩下的长度为`n-i`的一段继续进行切割(递归求解)：
+$$
+r_n=max(p_i+r_{n-i})\space\space\space\space 1 \le i\le n
+$$
+**自顶向下递归实现**
+
+```
+CUT-ROD(p, n)
+	if n == 0
+		return 0
+	q = -∞
+	for i = 1 to n
+		q = max(q, p[i] + CUT-ROD(p, n - i))
+	return q
+```
+
+```c++
+int cut_rod(vector<int> p, int n) {
+    if (n == 0) return 0;
+    int q = INT_MIN;
+    for (int i = 1; i <= n; ++i) {
+        q = max(q, p[i] + cut_rod(p, n - i));
+    }
+    return q;
+}
+
+// 测试函数
+// int main() {
+//     vector<int> v = {0, 1, 5, 8, 9, 10, 17, 17, 20, 24, 30};
+//     for (int i = 1; i < v.size(); ++i) {
+//         cout << cut_rod(v, i) << endl;
+//     }
+// }
+```
+
+效率极差，因为它反复地调用相同的参数值对自身进行递归调用，即它仿佛求解相同的子问题。
+
+**使用动态规划方法求解最优钢条切割问题**
+
+- 带备忘的自顶向下法
+
+  ```
+  MEMOIZED-CUT-ROD(p, n)
+  	let r[0.. n] be a new array
+  	for i = 0 to n
+  		r[i] = -∞
+  	return MEMOIZED-CUT-AUX(p, n, r)
+  
+  MEMOIZED-CUT-AUX(p, n, r)
+  	if r[n] >= 0
+  		return r[n]
+  	if n == 0
+  		q = 0
+  	else q = -∞
+  		for i = 1 to n
+  			q = max(q, p[i] + MEMOIZED-CUT-AUX(p, n - i, r))
+  	r[n] = q
+  	return q
+  ```
+
+  ```c++
+  // 自顶向下
+  int memoized_cut_rod_aux(vector<int> p, int n, vector<int>& r) {
+      if (r[n] >= 0) return r[n];
+      int q = INT_MIN;
+      if (n == 0) q = 0;
+      else {
+          for (int i = 1; i <= n; ++i) {
+              q = max(q, p[i] + memoized_cut_rod_aux(p, n - i, r));
+          }
+      }
+      r[n] = q;
+      return q;
+  }
+  
+  int memoized_cut_rod(vector<int> p, int n) {
+      vector<int> r(n + 1, INT_MIN);
+      return memoized_cut_rod_aux(p, n, r);
+  }
+  ```
+
+- 自底向上
+
+  ```
+  BOTTOM-UP-CUT-ROD(p, n)
+  	let r[0.. n] be a new array
+  	r[0] = 0
+  	for j = 1 to n
+  		q = -∞
+  		for i = 1 to j
+  			q = max(q, p[i] + r[j - i])
+  		r[j] = q
+  	return r[n]
+  ```
+
+  ```c++
+  // 自底向上
+  int bottom_up_cut_rod(vector<int> p, int n) {
+      vector<int> r(n + 1, 0);
+      int q = INT_MIN;
+      for (int i = 1; i <= n; ++i) {
+          q = INT_MIN;
+          for (int j = 1; j <= i; ++j) {
+              q = max(q, p[j] + r[i - j]);
+          }
+          r[i] = q;
+      }
+      return r[n];
+  }
+  
+  // 测试函数
+  // int main() {
+  //     vector<int> v = {0, 1, 5, 8, 9, 10, 17, 17, 20, 24, 30};
+  //     for (int i = 1; i < v.size(); ++i) {
+  //         cout << bottom_up_cut_rod(v, i) << endl;
+  //     }
+  // }
+  ```
+
+  **重构解**
+
+  对长度为`j`的钢条不仅计算最大收益值`rj`，还保存最优解对应的第一段钢条的切割长度`sj`：
+
+  ```
+  EXTENDED-BOTTOM-UP-CUT-ROD(p, n)
+  	let r[0.. n] and s[0.. n] be a new array
+  	r[0] = 0
+  	for j = 1 to n
+  		q = -∞
+  		for i = 1 to j
+  			if q < p[i] + r[j - i]
+  				q = p[i] + r[j - i]
+  				s[j] = i
+  		r[j] = q
+  	return r and s
+  ```
+
+  下面接受两个参数：价格表`p`和钢条长度`n`，输出长度为`n`的钢条的完整的最优解切割方案：
+
+  ```
+  PRINT-CUT-ROD-SOLUTION(P, n)
+  	(r, s) = EXTENDED-BOTTOM-UP-CUT-ROD(p, n)
+  	while n > 0
+  		print s[n]
+  		n = n - s[n]
+  ```
+
+  ```c++
+  // 重构解
+  vector<int> extended_bottom_up_cut_rod(vector<int> p, int n, vector<int> &s) {
+      vector<int> r(n + 1, 0);
+      int q = INT_MIN;
+      for (int i = 1; i < n + 1; ++i) {
+          q = INT_MIN;
+          for (int j = 1; j <= i; ++j) {
+              if (q < p[j] + r[i - j]) {
+                  q = p[j] + r[i - j];
+                  s[i] = j;
+              }
+          }
+          r[i] = q;
+      }
+      return r;
+  }
+  
+  void print_cut_rod_solution(vector<int> p, int n) {
+      vector<int> s(n + 1, 0);
+      vector<int> r = extended_bottom_up_cut_rod(p, n, s);
+      while (n > 0) {
+          cout << s[n] << " ";
+          n -= s[n];
+      }
+  }
+  
+  // 测试函数
+  // int main() {
+  //     vector<int> v = {0, 1, 5, 8, 9, 10, 17, 17, 20, 24, 30};
+  //     for (int i = 1; i < v.size(); ++i) {
+  //         cout << bottom_up_cut_rod(v, i) << endl;
+  //         print_cut_rod_solution(v, i);
+  //         cout << endl;
+  //     }
+  // }
+  ```
+
+  ### 15.2. 矩阵链乘法
+
+  
