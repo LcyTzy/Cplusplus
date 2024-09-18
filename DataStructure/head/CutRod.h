@@ -100,3 +100,13 @@ void print_cut_rod_solution(vector<int> p, int n) {
         n -= s[n];
     }
 }
+
+// 测试函数
+// int main() {
+//     vector<int> v = {0, 1, 5, 8, 9, 10, 17, 17, 20, 24, 30};
+//     for (int i = 1; i < v.size(); ++i) {
+//         cout << bottom_up_cut_rod(v, i) << endl;
+//         print_cut_rod_solution(v, i);
+//         cout << endl;
+//     }
+// }
